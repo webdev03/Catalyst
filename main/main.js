@@ -82,16 +82,16 @@ async function checkForUpdate(windowToDialog) {
             return;
         }
         const releaseJSON = await githubFetch.json();
-        const replacerRegex = /["."]/gm;
-        const appVersionStr = app.getVersion();
-        const tagVersionInt = Number(appVersionStr.replace(replacerRegex, ""));
+        // First get the version of the app (for example "v3.1.4"), then remove the first character (for example, "3.1.4") then split the remaining string into three parts and convert all the array entries into numbers
+        const tagVersion = app.getVersion().substr(1).split(".").map(Number);
         for (let i in releaseJSON) {
             const release = releaseJSON[i];
             if (release.draft || release.prerelease) continue;
-            const replaced = release["tag_name"].replace(replacerRegex, "");
+            // Do the same to the release in github
+            const replaced = release["tag_name"].substr(1).split(".").map(Number);
+            // First check if the major version is greater, then check if the minor version is greater, then check if the patch version is greater
             if (
-                tagVersionInt <
-                Number(replaced.startsWith("v") ? replaced.slice(1) : replaced)
+                tagVersion[0] < replaced[0] || tagVersion[1] < replaced[1] || tagVersion[2] < replaced[2]
             ) {
                 dialog.showMessageBox(windowToDialog, {
                     message: "An update is available for Catalyst.",
